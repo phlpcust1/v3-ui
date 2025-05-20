@@ -21,11 +21,6 @@ const CurriculumCoachesList = () => {
   const [schoolTerms, setSchoolTerms] = useState([])
   const [selectedSchoolTerm, setSelectedSchoolTerm] = useState("ALL")
   const [showSummary, setShowSummary] = useState(false)
-  const [coachStats, setCoachStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0,
-  })
 
   const navigate = useNavigate()
 
@@ -85,13 +80,6 @@ const CurriculumCoachesList = () => {
 
         setCoaches(response.data)
         setFilteredCoaches(response.data)
-
-        // Calculate coach statistics
-        setCoachStats({
-          total: response.data.length,
-          active: response.data.filter((coach) => coach.isActive).length,
-          inactive: response.data.filter((coach) => !coach.isActive).length,
-        })
       } catch (error) {
         console.error("Error fetching coaches:", error)
         setError("Failed to load coaches. Please try again.")
@@ -203,28 +191,6 @@ const CurriculumCoachesList = () => {
             </div>
           )}
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="card bg-white shadow-md">
-              <div className="card-body p-4 text-center">
-                <h2 className="card-title justify-center text-2xl">{coachStats.total}</h2>
-                <p className="text-gray-600">Total Coaches</p>
-              </div>
-            </div>
-            <div className="card bg-white shadow-md">
-              <div className="card-body p-4 text-center">
-                <h2 className="card-title justify-center text-2xl">{coachStats.active}</h2>
-                <p className="text-gray-600">Active Coaches</p>
-              </div>
-            </div>
-            <div className="card bg-white shadow-md">
-              <div className="card-body p-4 text-center">
-                <h2 className="card-title justify-center text-2xl">{coachStats.inactive}</h2>
-                <p className="text-gray-600">Inactive Coaches</p>
-              </div>
-            </div>
-          </div>
-
           <div className="card bg-white w-full shadow-xl">
             <div className="card-body">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -249,9 +215,6 @@ const CurriculumCoachesList = () => {
 
                 {/* Right: Actions */}
                 <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                  <button className="btn btn-outline btn-sm" onClick={() => setShowSummary(!showSummary)}>
-                    {showSummary ? "Hide Summary" : "View Coaching Summary"}
-                  </button>
                   <button
                     className="btn btn-outline btn-sm"
                     onClick={handleExportCSV}
@@ -274,34 +237,6 @@ const CurriculumCoachesList = () => {
                 </div>
               </div>
 
-              {/* Coaching Summary */}
-              {showSummary && (
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                  <h3 className="font-bold mb-2">Coaching Summary</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="stat bg-white shadow-sm rounded-lg">
-                      <div className="stat-title">Program</div>
-                      <div className="stat-value text-lg">{currentProgram?.code || "All Programs"}</div>
-                      <div className="stat-desc">{currentProgram?.name}</div>
-                    </div>
-                    <div className="stat bg-white shadow-sm rounded-lg">
-                      <div className="stat-title">School Term</div>
-                      <div className="stat-value text-lg">
-                        {selectedSchoolTerm === "ALL"
-                          ? "All Terms"
-                          : schoolTerms.find((t) => t.id.toString() === selectedSchoolTerm)?.name || "Selected Term"}
-                      </div>
-                      <div className="stat-desc">Current filter</div>
-                    </div>
-                    <div className="stat bg-white shadow-sm rounded-lg">
-                      <div className="stat-title">Coach Count</div>
-                      <div className="stat-value text-lg">{filteredCoaches.length}</div>
-                      <div className="stat-desc">Matching current filters</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="loading loading-spinner loading-lg"></div>
@@ -321,7 +256,6 @@ const CurriculumCoachesList = () => {
                           <th className="cursor-pointer hover:bg-gray-100" onClick={() => requestSort("email")}>
                             Email {getSortDirectionIndicator("email")}
                           </th>
-                          <th>Status</th>
                           <th className="text-right">Actions</th>
                         </tr>
                       </thead>
@@ -334,11 +268,6 @@ const CurriculumCoachesList = () => {
                               </td>
                               <td>{coach.coachId}</td>
                               <td>{coach.email}</td>
-                              <td>
-                                <span className={`badge ${coach.isActive ? "badge-success" : "badge-error"} badge-sm`}>
-                                  {coach.isActive ? "Active" : "Inactive"}
-                                </span>
-                              </td>
                               <td className="text-right">
                                 <button
                                   className="btn btn-sm btn-outline"
@@ -351,7 +280,7 @@ const CurriculumCoachesList = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="5" className="text-center py-8">
+                            <td colSpan="4" className="text-center py-8">
                               <div className="flex flex-col items-center justify-center text-gray-500">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"

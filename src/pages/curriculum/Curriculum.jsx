@@ -20,6 +20,7 @@ export function Curriculum() {
   const [semFilter, setSemFilter] = useState("All")
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const [activeTab, setActiveTab] = useState(userRole === "COACH" ? "Courses" : "List of Curriculum")
 
@@ -79,8 +80,12 @@ export function Curriculum() {
     const matchesCurriculum = curriculumFilter === "All" || course.curriculumId.toString() === curriculumFilter
     const matchesYear = yearFilter === "All" || course.year === yearFilter
     const matchesSem = semFilter === "All" || course.sem.toString() === semFilter
+    const matchesSearch =
+      !searchQuery ||
+      course.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-    return matchesCurriculum && matchesYear && matchesSem
+    return matchesCurriculum && matchesYear && matchesSem && matchesSearch
   })
 
   const {
@@ -300,6 +305,20 @@ export function Curriculum() {
                     className={`tab ${activeTab === "List of Curriculum" ? "bg-gray-200 text-black" : ""}`}
                     onClick={() => handleTabChange("List of Curriculum")}
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
                     List of Curriculum
                   </a>
                 )}
@@ -307,6 +326,20 @@ export function Curriculum() {
                   className={`tab ${activeTab === "Courses" ? "bg-gray-200 text-black" : ""}`}
                   onClick={() => handleTabChange("Courses")}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
                   Courses
                 </a>
               </div>
@@ -341,7 +374,23 @@ export function Curriculum() {
                                   {isSubmitting ? (
                                     <span className="loading loading-spinner loading-xs"></span>
                                   ) : (
-                                    "Delete"
+                                    <>
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-4 w-4 mr-1"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                      </svg>
+                                      Delete
+                                    </>
                                   )}
                                 </button>
                               </td>
@@ -373,6 +422,15 @@ export function Curriculum() {
 
                   <div className="mt-6">
                     <button className="btn btn-neutral" onClick={() => setIsModalOpen(true)}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                      </svg>
                       Add Curriculum
                     </button>
                   </div>
@@ -381,74 +439,284 @@ export function Curriculum() {
 
               {activeTab === "Courses" && (
                 <div>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                    <div className="flex flex-wrap gap-2">
-                      <button className="btn btn-neutral" onClick={() => setIsAddCourseModalOpen(true)}>
-                        Add Course
-                      </button>
-                      <button className="btn btn-outline" onClick={() => setIsUploadFileModalOpen(true)}>
-                        Upload Courses
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        onClick={handleDownloadCoursesCsv}
-                        disabled={filteredCourses.length === 0}
-                      >
-                        Download as CSV
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+                  {/* Search and Filter Section */}
+                  <div className="bg-base-100 p-4 rounded-lg shadow-sm mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      {/* Search Input */}
                       <div className="form-control">
-                        <select
-                          className="select select-bordered"
-                          value={selectedCurriculumId}
-                          onChange={(e) => {
-                            setCurriculumFilter(e.target.value)
-                            setSelectedCurriculumId(e.target.value)
-                          }}
-                        >
-                          <option value="All">All Curriculum</option>
-                          {curriculums.map((curr) => (
-                            <option key={curr.id} value={curr.id}>
-                              {curr.code}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="input-group">
+                          <input
+                            type="text"
+                            placeholder="Search courses..."
+                            className="input input-bordered w-full md:w-64"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                          <button className="btn btn-square btn-neutral">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
 
-                      <select
-                        className="select select-bordered"
-                        value={yearFilter}
-                        onChange={(e) => setYearFilter(e.target.value)}
-                      >
-                        <option value="All">All Years</option>
-                        <option value="FIRST">First Year</option>
-                        <option value="SECOND">Second Year</option>
-                        <option value="THIRD">Third Year</option>
-                        <option value="FOURTH">Fourth Year</option>
-                      </select>
-                      <select
-                        className="select select-bordered"
-                        value={semFilter}
-                        onChange={(e) => setSemFilter(e.target.value)}
-                      >
-                        <option value="All">All Semesters</option>
-                        <option value="1">1st Semester</option>
-                        <option value="2">2nd Semester</option>
-                      </select>
+                      {/* Filters */}
+                      <div className="flex flex-wrap gap-2">
+                        <div className="form-control">
+                          <div className="input-group">
+                            <span className="bg-base-200 px-3 flex items-center">
+                      
+                            </span>
+                            <select
+                              className="select select-bordered"
+                              value={selectedCurriculumId}
+                              onChange={(e) => {
+                                setCurriculumFilter(e.target.value)
+                                setSelectedCurriculumId(e.target.value)
+                              }}
+                            >
+                              <option value="All">All Curriculum</option>
+                              {curriculums.map((curr) => (
+                                <option key={curr.id} value={curr.id}>
+                                  {curr.code}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="form-control">
+                          <div className="input-group">
+                            <span className="bg-base-200 px-3 flex items-center">
+                              
+                            </span>
+                            <select
+                              className="select select-bordered"
+                              value={yearFilter}
+                              onChange={(e) => setYearFilter(e.target.value)}
+                            >
+                              <option value="All">All Years</option>
+                              <option value="FIRST">First Year</option>
+                              <option value="SECOND">Second Year</option>
+                              <option value="THIRD">Third Year</option>
+                              <option value="FOURTH">Fourth Year</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="form-control">
+                          <div className="input-group">
+                            <span className="bg-base-200 px-3 flex items-center">
+                            
+                            </span>
+                            <select
+                              className="select select-bordered"
+                              value={semFilter}
+                              onChange={(e) => setSemFilter(e.target.value)}
+                            >
+                              <option value="All">All Semesters</option>
+                              <option value="1">1st Semester</option>
+                              <option value="2">2nd Semester</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <button className="btn btn-neutral" onClick={() => setIsAddCourseModalOpen(true)}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Course
+                    </button>
+                    <button className="btn btn-outline" onClick={() => setIsUploadFileModalOpen(true)}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        />
+                      </svg>
+                      Upload Courses
+                    </button>
+                    <button
+                      className="btn btn-outline"
+                      onClick={handleDownloadCoursesCsv}
+                      disabled={filteredCourses.length === 0}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                      Download as CSV
+                    </button>
+                  </div>
+
+                  {/* Courses Count */}
+                  <div className="text-sm text-gray-500 mb-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 inline mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                      />
+                    </svg>
+                    Showing {filteredCourses.length} courses
+                    {searchQuery && (
+                      <span>
+                        {" "}
+                        matching "<span className="font-medium">{searchQuery}</span>"
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Courses Table */}
                   <div className="overflow-x-auto">
                     {filteredCourses.length > 0 ? (
                       <table className="table table-zebra w-full">
                         <thead className="bg-base-200">
                           <tr>
-                            <th>Subject</th>
-                            <th>Description</th>
-                            <th>Units</th>
-                            <th>Sem</th>
-                            <th>Year</th>
+                            <th>
+                              <div className="flex items-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 mr-1"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                                Subject
+                              </div>
+                            </th>
+                            <th>
+                              <div className="flex items-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 mr-1"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                  />
+                                </svg>
+                                Description
+                              </div>
+                            </th>
+                            <th>
+                              <div className="flex items-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 mr-1"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                                  />
+                                </svg>
+                                Units
+                              </div>
+                            </th>
+                            <th>
+                              <div className="flex items-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 mr-1"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                                Sem
+                              </div>
+                            </th>
+                            <th>
+                              <div className="flex items-center">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5 mr-1"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                                  />
+                                </svg>
+                                Year
+                              </div>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -456,19 +724,71 @@ export function Curriculum() {
                             <tr key={course.id} className="hover">
                               <td className="font-medium">{course.subject}</td>
                               <td>{course.description}</td>
-                              <td>{course.units}</td>
                               <td>
-                                <span className="badge">{course.sem}</span>
+                                <div className="flex items-center">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4 mr-1 text-gray-500"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                                    />
+                                  </svg>
+                                  {course.units}
+                                </div>
                               </td>
                               <td>
-                                <span className="badge badge-outline">{course.year}</span>
+                                <span className="badge bg-gray-200 text-gray-800 border-0">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-3 w-3 mr-1"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                  {course.sem}
+                                </span>
+                              </td>
+                              <td>
+                                <span className="badge badge-outline">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-3 w-3 mr-1"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                                    />
+                                  </svg>
+                                  {course.year}
+                                </span>
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     ) : (
-                      <div className="text-center py-10">
+                      <div className="text-center py-10 bg-base-100 rounded-lg">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-12 w-12 mx-auto text-gray-400"
@@ -485,9 +805,11 @@ export function Curriculum() {
                         </svg>
                         <p className="mt-4 text-lg font-medium">No courses found</p>
                         <p className="text-gray-500">
-                          {curriculumFilter === "All"
-                            ? "Add a new course or adjust your filters"
-                            : "Add a new course to this curriculum"}
+                          {searchQuery
+                            ? `No courses matching "${searchQuery}"`
+                            : curriculumFilter === "All"
+                              ? "Add a new course or adjust your filters"
+                              : "Add a new course to this curriculum"}
                         </p>
                       </div>
                     )}
@@ -502,11 +824,38 @@ export function Curriculum() {
       {isAddCourseModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">Add Course</h3>
+            <h3 className="font-bold text-lg flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Course
+            </h3>
             <form onSubmit={handleSubmitCourse(onSubmitAddCourse)} className="mt-4 grid gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Curriculum</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    Curriculum
+                  </span>
                 </label>
                 <select
                   className="select select-bordered w-full"
@@ -527,19 +876,53 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Subject</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Subject
+                  </span>
                 </label>
                 <input
                   type="text"
                   className="input input-bordered"
-                  {...registerCourse("subject", { required: "Subject is required" })}
+                  {...registerCourse("subject", {
+                    required: "Subject is required",
+                  })}
                 />
                 {courseErrors.subject && <span className="text-red-500 text-sm">{courseErrors.subject.message}</span>}
               </div>
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Description</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Description
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -555,19 +938,53 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Units</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                      />
+                    </svg>
+                    Units
+                  </span>
                 </label>
                 <input
                   type="number"
                   className="input input-bordered"
-                  {...registerCourse("units", { required: "Units are required" })}
+                  {...registerCourse("units", {
+                    required: "Units are required",
+                  })}
                 />
                 {courseErrors.units && <span className="text-red-500 text-sm">{courseErrors.units.message}</span>}
               </div>
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Semester</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Semester
+                  </span>
                 </label>
                 <select
                   className="select select-bordered"
@@ -584,7 +1001,25 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Year</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                      />
+                    </svg>
+                    Year
+                  </span>
                 </label>
                 <select
                   className="select select-bordered"
@@ -603,9 +1038,33 @@ export function Curriculum() {
 
               <div className="modal-action">
                 <button type="submit" className="btn btn-neutral" disabled={isSubmitting || !selectedCurriculumId}>
-                  {isSubmitting ? <span className="loading loading-spinner loading-xs"></span> : "Submit"}
+                  {isSubmitting ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Submit
+                    </>
+                  )}
                 </button>
                 <button type="button" className="btn btn-ghost" onClick={() => setIsAddCourseModalOpen(false)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Cancel
                 </button>
               </div>
@@ -617,11 +1076,43 @@ export function Curriculum() {
       {isUploadFileModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">Upload Courses</h3>
+            <h3 className="font-bold text-lg flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              Upload Courses
+            </h3>
             <form onSubmit={handleUploadCourses} className="mt-4">
               <div className="form-control mb-4">
                 <label className="label">
-                  <span className="label-text">Select Curriculum</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    Select Curriculum
+                  </span>
                 </label>
                 <select
                   className="select select-bordered w-full"
@@ -642,7 +1133,23 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Upload CSV File</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Upload CSV File
+                  </span>
                 </label>
                 <input
                   type="file"
@@ -652,7 +1159,23 @@ export function Curriculum() {
                   required
                 />
                 <label className="label">
-                  <span className="label-text-alt text-gray-500">CSV format: Subject,Description,Units,Sem,Year</span>
+                  <span className="label-text-alt text-gray-500 flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    CSV format: Subject,Description,Units,Sem,Year
+                  </span>
                 </label>
               </div>
 
@@ -662,9 +1185,38 @@ export function Curriculum() {
                   className="btn btn-neutral"
                   disabled={isSubmitting || !uploadFile || !selectedCurriculumId || selectedCurriculumId === "All"}
                 >
-                  {isSubmitting ? <span className="loading loading-spinner loading-xs"></span> : "Upload"}
+                  {isSubmitting ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        />
+                      </svg>
+                      Upload
+                    </>
+                  )}
                 </button>
                 <button type="button" className="btn btn-ghost" onClick={() => setIsUploadFileModalOpen(false)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Cancel
                 </button>
               </div>
@@ -676,11 +1228,43 @@ export function Curriculum() {
       {isModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">Add Curriculum</h3>
+            <h3 className="font-bold text-lg flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Add Curriculum
+            </h3>
             <form onSubmit={handleSubmit(onSubmit)} className="mt-4 grid gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">CURR ID#</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                      />
+                    </svg>
+                    CURR ID#
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -692,7 +1276,23 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">REV#</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    REV#
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -707,7 +1307,23 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">EFFECTIVITY</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    EFFECTIVITY
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -721,7 +1337,23 @@ export function Curriculum() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">CMO NAME</span>
+                  <span className="label-text flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    CMO NAME
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -733,9 +1365,33 @@ export function Curriculum() {
 
               <div className="modal-action">
                 <button type="submit" className="btn btn-neutral" disabled={isSubmitting}>
-                  {isSubmitting ? <span className="loading loading-spinner loading-xs"></span> : "Submit"}
+                  {isSubmitting ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Submit
+                    </>
+                  )}
                 </button>
                 <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Close
                 </button>
               </div>
